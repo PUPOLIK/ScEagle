@@ -34,9 +34,9 @@
 2. Запустите Python-сервер
 3. В nginx (`/etc/nginx/sites-available/`) добавьте конфиг (рабочий вариант прилагается)
 4. Установите сертификаты:
-   `apt install certbot python3-certbot-nginx -y`
+   `sudo apt install certbot python3-certbot-nginx -y`
    получение сертификатов:
-   `certbot --nginx -d sceagle.minbed.ru`
+   `sudo certbot --nginx -d sceagle.minbed.ru`
 5. В конфиге укажите пути к полученным сертификатам
 6. Откройте порты 80 и 443 в настройках роутера/фаервола
 7. Перезагрузите страницу — всё готово!
