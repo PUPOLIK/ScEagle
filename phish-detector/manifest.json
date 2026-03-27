@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "ScEagle - Eagle Scam Scanner",
+  "short_name": "ScEagle",
+  "version": "1.0.0",
+  "description": "Обнаруживает фишинговые сайты по возрасту домена, обфускации кода и подозрительным формам",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://sceagle.minbed.ru/*",
+    "<all_urls>"
+  ],
+  "web_accessible_resources": [{
+    "resources": ["sounds/*.mp3", "sounds/*.wav"],
+    "matches": ["<all_urls>"]
+  }],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/whois-api.js", "content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "ScEagle - Проверить сайт",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
