@@ -1,18 +1,37 @@
 // lib/whois-api.js - WHOIS модуль для проверки возраста домена
-// Использует свой сервер на sceagle.minbed.ru замените на свой
 
 class WhoisChecker {
   constructor() {
     console.log('WhoisChecker инициализирован');
   }
 
-  async checkDomain(domain) {
-    console.log('Проверка домена через сервер:', domain);
+  // Функция для получения основного домена (без поддоменов)
+  getMainDomain(domain) {
+    const parts = domain.split('.');
+    // Если домен имеет больше 2 частей (например, esia.gosuslugi.ru)
+    if (parts.length > 2) {
+      // Берем последние две части (gosuslugi.ru)
+      return parts.slice(-2).join('.');
+    }
+    return domain;
+  }
+
+  async checkDomain(domain, currentUrl = '') {
+    // Обрезаем www.
+    let cleanDomain = domain.replace(/^www\./, '');
+    
+    // Сохраняем исходный для отображения
+    const originalDomain = cleanDomain;
+    
+    // Для WHOIS используем основной домен (без поддоменов)
+    const whoisDomain = this.getMainDomain(cleanDomain);
+    
+    console.log('Проверка домена через сервер:', whoisDomain);
+    console.log('Исходный домен:', originalDomain);
     
     try {
-      const serverUrl = 'https://sceagle.minbed.ru'; // замените
-      
-      const response = await fetch(`${serverUrl}/?domain=${domain}`);
+      const serverUrl = 'https://sceagle.minbed.ru';
+      const response = await fetch(`${serverUrl}/?domain=${whoisDomain}`);
       
       if (!response.ok) {
         throw new Error(`Ошибка сервера: ${response.status}`);
@@ -23,12 +42,18 @@ class WhoisChecker {
       
       const creationDate = data.creation_date;
       
+      // Проверка на тайпсквоттинг (используем исходный домен)
+      let typosquatting = null;
+      if (window.checkTyposquatting) {
+        typosquatting = window.checkTyposquatting(originalDomain, currentUrl);
+        console.log('Проверка на тайпсквоттинг:', typosquatting);
+      }
       
       if (!creationDate) {
-        console.log('Дата регистрации не найдена');// если дата не найдена в ответе
+        console.log('Дата регистрации не найдена');
         return {
           success: true,
-          domain: domain,
+          domain: originalDomain,
           creationDate: null,
           ageInDays: null,
           ageInHours: null,
@@ -36,7 +61,8 @@ class WhoisChecker {
           isCritical: false,
           riskLevel: 'unknown',
           riskColor: 'unknown',
-          message: 'Не удалось определить дату регистрации. WHOIS может быть скрыт регистратором.'
+          message: 'Не удалось определить дату регистрации. WHOIS может быть скрыт регистратором.',
+          typosquatting: typosquatting
         };
       }
 
@@ -65,7 +91,7 @@ class WhoisChecker {
 
       return {
         success: true,
-        domain: domain,
+        domain: originalDomain,
         creationDate: date.toISOString().split('T')[0],
         ageInDays: ageInDays,
         ageInHours: ageInDays * 24,
@@ -73,14 +99,15 @@ class WhoisChecker {
         isCritical: ageInDays < 3,
         riskLevel: riskLevel,
         riskColor: riskColor,
-        message: riskMessage
+        message: riskMessage,
+        typosquatting: typosquatting
       };
       
     } catch (error) {
       console.error('Ошибка при запросе к серверу:', error);
       return {
         success: false,
-        domain: domain,
+        domain: originalDomain,
         error: error.message,
         message: 'Ошибка подключения к серверу. Проверьте интернет-соединение.'
       };
