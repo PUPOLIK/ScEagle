@@ -102,10 +102,6 @@ async function autoCheckDomain() {
     const result = await whoisChecker.checkDomain(domain);
     console.log('Результат проверки:', result);
     
-    // Показываем баннер ТОЛЬКО если:
-    // 1. Запрос успешен
-    // 2. Есть реальная дата (не null)
-    // 3. Возраст МЕНЬШЕ 3 ДНЕЙ
     if (result.success && result.creationDate !== null && result.ageInDays < 3) {
       console.log('Условие сработало! Возраст', result.ageInDays, '< 3');
       showWarningBanner(result.ageInDays, result.creationDate);

@@ -30,14 +30,43 @@ document.addEventListener('DOMContentLoaded', function() {
       domain: domain 
     });
   }
+  
+  
+  function formatTyposquattingWarning(typo) {// Функция для отображения предупреждения о тайпсквоттинге
+    if (!typo) return '';
+    
+    if (typo.isLegit) {
+      return '<div class="safe"><strong>✅ Доверенный домен</strong></div>';
+    }
+    
+    if (typo.typosquatting) {
+      let html = '<div class="critical" style="background-color:#ffebee; border-left-color:#d32f2f; padding:10px; margin:10px 0;">';
+      html += '<strong>⚠️ ПОДОЗРЕНИЕ НА ПОДДЕЛКУ!</strong><br>';
+      html += 'Этот сайт может имитировать:';
+      for (const match of typo.matches) {
+        if (match.type === 'subdomain') {
+          html += `<br>• Похож на поддомен: ${match.domain}`;
+        } else {
+          html += `<br>• Похож на: ${match.domain} (сходство: ${match.distance} символа)`;
+        }
+      }
+      html += '</div>';
+      return html;
+    }
+    
+    return '';
+  }
 
   chrome.runtime.onMessage.addListener((request) => {
     if (request.action === 'whoisResult') {
       if (request.data.success) {
         
-        // Случай: дата не найдена (WHOIS скрыт)
-        if (request.data.riskLevel === 'unknown') {
+
+        const typoHtml = formatTyposquattingWarning(request.data.typosquatting); // Форматируем предупреждение о тайпсквоттинге
+        
+        if (request.data.riskLevel === 'unknown') {//дата не найдена WHOIS скрыт
           whoisResult.innerHTML = `
+            ${typoHtml}
             <div class="info">
               <strong>⚠️ НЕТ ДАННЫХ</strong><br><br>
               Домен: ${request.data.domain}<br>
@@ -65,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         whoisResult.innerHTML = `
+          ${typoHtml}
           <div class="${statusClass}">
             <strong>${statusText}</strong><br><br>
             Домен: ${request.data.domain}<br>
